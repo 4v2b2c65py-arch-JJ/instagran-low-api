@@ -19,7 +19,8 @@ from neural_orchestrator import (
     RealAPIIntegration,
     SocialMediaTestSuite,
     Platform,
-    APIKeyCaptureAgent
+    APIKeyCaptureAgent,
+    A2AProtocol
 )
 
 
@@ -78,6 +79,15 @@ def main():
     capture_parser.add_argument('--list', action='store_true', help='List captured keys')
     capture_parser.add_argument('--session', action='store_true', help='Show session info')
     
+    # A2A protocol command
+    a2a_parser = subparsers.add_parser('a2a', help='Agent-to-Agent protocol operations')
+    a2a_parser.add_argument('--pipeline', action='store_true', help='Run credential pipeline sequence')
+    a2a_parser.add_argument('--connect', help='Connect to agent ID')
+    a2a_parser.add_argument('--send', help='Send message to agent')
+    a2a_parser.add_argument('--message-type', help='Message type')
+    a2a_parser.add_argument('--register', help='Register new agent')
+    a2a_parser.add_argument('--info', action='store_true', help='Show A2A session info')
+    
     args = parser.parse_args()
     
     if args.command == 'serve':
@@ -94,6 +104,8 @@ def main():
         asyncio.run(run_api_test(args))
     elif args.command == 'capture-keys':
         run_key_capture(args)
+    elif args.command == 'a2a':
+        asyncio.run(run_a2a_protocol(args))
     else:
         parser.print_help()
 
@@ -369,6 +381,85 @@ def run_key_capture(args):
     
     except Exception as e:
         print(f"Error during key capture: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+async def run_a2a_protocol(args):
+    """Run A2A protocol operations."""
+    print("=== Agent-to-Agent Protocol ===\n")
+    
+    # Get session key from environment
+    session_key = os.getenv("STARSHIP_SESSION_KEY")
+    if not session_key:
+        print("⚠️  STARSHIP_SESSION_KEY not found in environment")
+        print("Please set STARSHIP_SESSION_KEY environment variable")
+        return
+    
+    print(f"✓ Session key: {session_key[:8]}...")
+    
+    try:
+        a2a_protocol = A2AProtocol(session_key)
+        
+        if args.pipeline:
+            print("Running credential creation and validation pipeline...")
+            pipeline_results = await a2a_protocol.run_pipeline_sequence()
+            
+            print(f"\nPipeline Results:")
+            print(f"  Pipeline ID: {pipeline_results['pipeline_id']}")
+            print(f"  Status: {pipeline_results['final_status']}")
+            print(f"  Stages completed: {len(pipeline_results['stages_completed'])}")
+            print(f"  Stages failed: {len(pipeline_results['stages_failed'])}")
+            
+            if pipeline_results['stages_completed']:
+                print(f"\nCompleted stages:")
+                for stage in pipeline_results['stages_completed']:
+                    print(f"  ✓ {stage['stage']}: {stage['result']}")
+            
+            if pipeline_results['stages_failed']:
+                print(f"\nFailed stages:")
+                for stage in pipeline_results['stages_failed']:
+                    print(f"  ✗ {stage.get('stage', 'unknown')}: {stage.get('error', 'unknown')}")
+        
+        elif args.connect:
+            print(f"Connecting to agent: {args.connect}")
+            connected = await a2a_protocol.connect_to_agent(args.connect)
+            print(f"Connection result: {'Success' if connected else 'Failed'}")
+        
+        elif args.send and args.message_type:
+            print(f"Sending message to agent: {args.send}")
+            message = a2a_protocol.send_message(
+                args.send,
+                args.message_type,
+                {"content": "Test message", "timestamp": datetime.utcnow().isoformat()}
+            )
+            print(f"Message sent: {message.message_id}")
+        
+        elif args.register:
+            print(f"Registering agent: {args.register}")
+            agent = a2a_protocol.register_agent(
+                args.register,
+                "public_key_placeholder",
+                ["credential_management", "hosting"]
+            )
+            print(f"Agent registered: {agent.agent_id}")
+        
+        elif args.info:
+            session_info = a2a_protocol.get_session_info()
+            print("A2A Session Information:")
+            print(json.dumps(session_info, indent=2))
+        
+        else:
+            print("No A2A action specified. Use --help for options.")
+            print("\nAvailable actions:")
+            print("  --pipeline: Run credential pipeline sequence")
+            print("  --connect: Connect to agent")
+            print("  --send: Send message to agent")
+            print("  --register: Register new agent")
+            print("  --info: Show A2A session info")
+    
+    except Exception as e:
+        print(f"Error during A2A protocol: {e}")
         import traceback
         traceback.print_exc()
 

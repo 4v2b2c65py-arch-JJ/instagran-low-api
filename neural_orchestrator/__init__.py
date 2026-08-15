@@ -108,6 +108,14 @@ from .security.api_key_capture import (
     APIKeyCaptureAgent,
     APIKey
 )
+from .protocols.a2a_protocol import (
+    A2AProtocol,
+    A2AStatus,
+    CredentialStatus,
+    AgentIdentity,
+    Credential,
+    A2AMessage
+)
 
 __all__ = [
     'NeuralOrchestrator',
@@ -188,6 +196,12 @@ __all__ = [
     'TestSession',
     'APIKeyCaptureAgent',
     'APIKey',
+    'A2AProtocol',
+    'A2AStatus',
+    'CredentialStatus',
+    'AgentIdentity',
+    'Credential',
+    'A2AMessage',
     'AgentManager',
     'AgentStatus',
     'AgentType',

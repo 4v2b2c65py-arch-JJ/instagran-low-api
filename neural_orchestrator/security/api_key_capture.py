@@ -91,6 +91,7 @@ class APIKeyCaptureAgent:
         try:
             session_data = {
                 "session_id": self.session_id,
+                "session_key_hash": hashlib.sha256(self.session_key.encode()).hexdigest()[:16],
                 "started_at": datetime.utcnow().isoformat(),
                 "captured_keys": list(self.captured_keys.keys()),
                 "storage_dir": str(self.storage_dir)
