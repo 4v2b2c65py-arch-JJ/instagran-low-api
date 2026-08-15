@@ -1,6 +1,6 @@
-# Neural Orchestrator
+# instagran-low-api
 
-A comprehensive neural network package that operates as a central orchestrator and agent artificial intelligence system.
+Complete solution for device OS reaction data gathering and cross-service callbacks with Pinecone MCP integration. Provides easy parcel recovery methods and instant Linux userland deployment without connection loss.
 
 ## Features
 

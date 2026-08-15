@@ -46,6 +46,17 @@ from .safety.cognitive_awareness import CognitiveAwareness
 from .safety.threat_detection import ThreatDetection
 from .safety.connection_validator import ConnectionValidator
 from .safety.enhanced_guardrails import EnhancedGuardrails
+from .device.os_reaction_collector import DeviceOSReactionCollector, OSReactionEvent
+from .device.pinecone_integration import PineconeOSReactionIntegration, AdaptiveModelAccelerationManager
+from .social_media.instagram_plugin import InstagramPluginManager, InstagramPluginType, InstagramMediaItem, InstagramUserProfile
+from .core.lightweight_context_model import LightweightContextModel, ContextType, ContextItem
+from .cross_service_callbacks import (
+    CrossServiceCallbackManager,
+    CallbackParcel,
+    CallbackResponse,
+    CallbackStatus,
+    ParcelPriority
+)
 
 __all__ = [
     'NeuralOrchestrator',
@@ -85,5 +96,21 @@ __all__ = [
     'CognitiveAwareness',
     'ThreatDetection',
     'ConnectionValidator',
-    'EnhancedGuardrails'
+    'EnhancedGuardrails',
+    'DeviceOSReactionCollector',
+    'OSReactionEvent',
+    'PineconeOSReactionIntegration',
+    'AdaptiveModelAccelerationManager',
+    'InstagramPluginManager',
+    'InstagramPluginType',
+    'InstagramMediaItem',
+    'InstagramUserProfile',
+    'LightweightContextModel',
+    'ContextType',
+    'ContextItem',
+    'CrossServiceCallbackManager',
+    'CallbackParcel',
+    'CallbackResponse',
+    'CallbackStatus',
+    'ParcelPriority'
 ]

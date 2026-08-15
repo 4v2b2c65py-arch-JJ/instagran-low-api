@@ -406,7 +406,7 @@ class BrainMapLayer:
             'total_nodes': len(self.nodes),
             'total_connections': len(self.connections),
             'avg_activation': np.mean(activations) if activations else 0.0,
-            'max_activation': max(activations) if activations else0.0,
+            'max_activation': max(activations) if activations else 0.0,
             'highly_active_nodes': len([a for a in activations if a >= 0.7]),
             'input_sources': list(self.input_feeds.keys()),
             'total_inputs_processed': self.total_inputs_processed,

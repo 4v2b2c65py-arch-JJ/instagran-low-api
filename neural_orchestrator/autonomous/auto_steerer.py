@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from datetime import datetime
 import asyncio
+from enum import Enum
 
 
 class ActionType(Enum):
