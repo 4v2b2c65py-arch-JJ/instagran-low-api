@@ -104,6 +104,10 @@ from .social_media.test_suite import (
     TestCase,
     TestSession
 )
+from .security.api_key_capture import (
+    APIKeyCaptureAgent,
+    APIKey
+)
 
 __all__ = [
     'NeuralOrchestrator',
@@ -182,6 +186,8 @@ __all__ = [
     'TestType',
     'TestCase',
     'TestSession',
+    'APIKeyCaptureAgent',
+    'APIKey',
     'AgentManager',
     'AgentStatus',
     'AgentType',

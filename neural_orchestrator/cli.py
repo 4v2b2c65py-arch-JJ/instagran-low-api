@@ -18,7 +18,8 @@ from neural_orchestrator import (
     ModelContextType,
     RealAPIIntegration,
     SocialMediaTestSuite,
-    Platform
+    Platform,
+    APIKeyCaptureAgent
 )
 
 
@@ -67,6 +68,16 @@ def main():
     api_test_parser.add_argument('--send-message', help='Send test message to user')
     api_test_parser.add_argument('--message-content', help='Content for test message')
     
+    # API key capture command
+    capture_parser = subparsers.add_parser('capture-keys', help='Capture API keys with sudo')
+    capture_parser.add_argument('--auto', action='store_true', help='Auto-capture from common sources')
+    capture_parser.add_argument('--manual', nargs=2, metavar=('KEY_NAME', 'KEY_VALUE'), help='Manually set key')
+    capture_parser.add_argument('--config', help='Capture from config file')
+    capture_parser.add_argument('--env', help='Capture from environment variable')
+    capture_parser.add_argument('--export', help='Export to shell script')
+    capture_parser.add_argument('--list', action='store_true', help='List captured keys')
+    capture_parser.add_argument('--session', action='store_true', help='Show session info')
+    
     args = parser.parse_args()
     
     if args.command == 'serve':
@@ -81,6 +92,8 @@ def main():
         manage_config(args)
     elif args.command == 'api-test':
         asyncio.run(run_api_test(args))
+    elif args.command == 'capture-keys':
+        run_key_capture(args)
     else:
         parser.print_help()
 
@@ -258,6 +271,106 @@ async def run_api_test(args):
     
     finally:
         await api_integration.cleanup()
+
+
+def run_key_capture(args):
+    """Run API key capture operations."""
+    print("=== API Key Capture Agent ===\n")
+    
+    capture_agent = APIKeyCaptureAgent()
+    
+    try:
+        if args.auto:
+            print("Auto-capturing API keys from common sources...")
+            
+            # Check sudo access
+            if capture_agent.check_sudo_access():
+                print("✓ Sudo access available")
+            else:
+                print("⚠️  No sudo access - limited capture capabilities")
+            
+            # Capture Instagram keys
+            print("\nCapturing Instagram keys...")
+            insta_keys = capture_agent.auto_capture_instagram_keys()
+            for key_name, key in insta_keys.items():
+                print(f"  ✓ {key_name}: {key.key_value[:8]}... (from {key.source})")
+            
+            # Capture TikTok keys
+            print("\nCapturing TikTok keys...")
+            tiktok_keys = capture_agent.auto_capture_tiktok_keys()
+            for key_name, key in tiktok_keys.items():
+                print(f"  ✓ {key_name}: {key.key_value[:8]}... (from {key.source})")
+            
+            total = len(insta_keys) + len(tiktok_keys)
+            print(f"\nTotal keys captured: {total}")
+            
+            # Export to environment
+            capture_agent.export_to_environment()
+            print("✓ Keys exported to environment")
+            
+            # Generate env script
+            script_path = capture_agent.storage_dir / "setup_keys.sh"
+            capture_agent.generate_env_script(str(script_path))
+            print(f"✓ Environment script generated: {script_path}")
+        
+        elif args.manual:
+            key_name, key_value = args.manual
+            print(f"Manually setting key: {key_name}")
+            key = capture_agent.set_key_manually(key_name, key_value)
+            print(f"✓ Key stored: {key.key_value[:8]}...")
+            capture_agent.export_to_environment()
+        
+        elif args.config:
+            key_name = "API_KEY"  # Default key name
+            print(f"Capturing from config: {args.config}")
+            key = capture_agent.capture_from_system_config(key_name, args.config)
+            if key:
+                print(f"✓ Key captured: {key.key_value[:8]}...")
+                capture_agent.export_to_environment()
+            else:
+                print("✗ Failed to capture key from config")
+        
+        elif args.env:
+            print(f"Capturing from environment: {args.env}")
+            key = capture_agent.capture_from_environment(args.env)
+            if key:
+                print(f"✓ Key captured: {key.key_value[:8]}...")
+                capture_agent.export_to_environment()
+            else:
+                print("✗ Key not found in environment")
+        
+        elif args.export:
+            print(f"Generating environment script: {args.export}")
+            script_content = capture_agent.generate_env_script(args.export)
+            print("✓ Script generated")
+            print(f"\nScript preview:")
+            print(script_content[:200] + "...")
+        
+        elif args.list:
+            print("Captured keys:")
+            for key_name, key in capture_agent.captured_keys.items():
+                print(f"  {key_name}: {key.key_value[:8]}... (from {key.source}, captured {key.captured_at})")
+        
+        elif args.session:
+            session_info = capture_agent.get_session_info()
+            print("Session information:")
+            print(json.dumps(session_info, indent=2))
+        
+        else:
+            print("No capture action specified. Use --help for options.")
+            print("\nAvailable actions:")
+            print("  --auto: Auto-capture from common sources")
+            print("  --manual: Manually set a key")
+            print("  --config: Capture from config file")
+            print("  --env: Capture from environment variable")
+            print("  --export: Export to shell script")
+            print("  --list: List captured keys")
+            print("  --session: Show session info")
+    
+    except Exception as e:
+        print(f"Error during key capture: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 if __name__ == '__main__':
