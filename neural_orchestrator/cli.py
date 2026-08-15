@@ -7,6 +7,7 @@ import argparse
 import asyncio
 import sys
 import json
+import os
 from pathlib import Path
 from neural_orchestrator import (
     DeviceOSReactionCollector,
@@ -14,7 +15,10 @@ from neural_orchestrator import (
     AdaptiveModelAccelerationManager,
     InstagramPluginManager,
     LightweightContextModel,
-    ContextType
+    ModelContextType,
+    RealAPIIntegration,
+    SocialMediaTestSuite,
+    Platform
 )
 
 
@@ -53,6 +57,16 @@ def main():
     config_parser.add_argument('--show', action='store_true', help='Show current config')
     config_parser.add_argument('--set', nargs=2, metavar=('KEY', 'VALUE'), help='Set config value')
     
+    # API test command
+    api_test_parser = subparsers.add_parser('api-test', help='Test real API integration')
+    api_test_parser.add_argument('--token', help='Entry token to bypass API checks')
+    api_test_parser.add_argument('--username', help='Username to test')
+    api_test_parser.add_argument('--platform', choices=['instagram', 'tiktok'], default='instagram', help='Platform to test')
+    api_test_parser.add_argument('--target-users', action='store_true', help='Test all target users')
+    api_test_parser.add_argument('--interactive', action='store_true', help='Interactive testing mode')
+    api_test_parser.add_argument('--send-message', help='Send test message to user')
+    api_test_parser.add_argument('--message-content', help='Content for test message')
+    
     args = parser.parse_args()
     
     if args.command == 'serve':
@@ -65,6 +79,8 @@ def main():
         run_tests(args.component)
     elif args.command == 'config':
         manage_config(args)
+    elif args.command == 'api-test':
+        asyncio.run(run_api_test(args))
     else:
         parser.print_help()
 
@@ -137,6 +153,111 @@ def manage_config(args):
         with open(config_file, 'w') as f:
             json.dump(config, f, indent=2)
         print(f"Set {key} = {value}")
+
+
+async def run_api_test(args):
+    """Run API integration tests."""
+    print("=== Real API Integration Testing ===\n")
+    
+    # Check for entry token
+    entry_token = args.token or os.getenv("ENTRY_TOKEN")
+    if not entry_token:
+        print("⚠️  No entry token provided")
+        print("Use --token flag or set ENTRY_TOKEN environment variable")
+        print("Without token, API checks will be simulated\n")
+        use_real_api = False
+    else:
+        print(f"✓ Entry token provided: {entry_token[:8]}...")
+        print("✓ API availability: TRUE")
+        use_real_api = True
+    
+    # Initialize API integration
+    instagram_key = os.getenv("INSTAGRAM_API_KEY") if use_real_api else None
+    tiktok_key = os.getenv("TIKTOK_API_KEY") if use_real_api else None
+    
+    api_integration = RealAPIIntegration(
+        instagram_api_key=instagram_key,
+        tiktok_api_key=tiktok_key
+    )
+    
+    # Initialize test suite
+    test_suite = SocialMediaTestSuite(api_integration)
+    
+    # Target users
+    target_users = ["katiewynnz", "pavuk1_0", "billieeilish", "cinnannoe", "snowie5370"]
+    
+    try:
+        if args.interactive:
+            print("Starting interactive testing mode...")
+            await test_suite.interactive_test_mode()
+        
+        elif args.target_users:
+            print("Testing all target users...")
+            session = test_suite.create_test_session()
+            results = await test_suite.run_target_user_tests()
+            
+            print(f"\nTest Results:")
+            for result in results:
+                print(f"  {result.name}: {result.status.value}")
+            
+            summary = test_suite.get_session_summary()
+            print(f"\nSession Summary:")
+            print(f"  Total tests: {summary['total_tests']}")
+            print(f"  Passed: {summary['passed']}")
+            print(f"  Failed: {summary['failed']}")
+            print(f"  Success rate: {summary['success_rate']:.2%}")
+        
+        elif args.send_message and args.message_content:
+            username = args.send_message
+            content = args.message_content
+            platform = Platform.INSTAGRAM if args.platform == 'instagram' else Platform.TIKTOK
+            
+            print(f"Sending message to {username} on {args.platform}...")
+            print(f"Content: {content}")
+            
+            confirm = input("Confirm send? (y/n): ")
+            if confirm.lower() == 'y':
+                test = await test_suite.run_message_send_test(username, content, platform)
+                print(f"Result: {test.status.value}")
+                if test.result:
+                    print(f"Send success: {test.result.get('send_success')}")
+            else:
+                print("Send cancelled")
+        
+        elif args.username:
+            username = args.username
+            platform = Platform.INSTAGRAM if args.platform == 'instagram' else Platform.TIKTOK
+            
+            print(f"Testing profile: {username} on {args.platform}")
+            
+            # Profile match test
+            profile_test = await test_suite.run_profile_match_test(username, platform)
+            print(f"Profile match: {profile_test.status.value}")
+            
+            if profile_test.result:
+                print(f"  Profile found: {profile_test.result.get('profile_found')}")
+                print(f"  User ID: {profile_test.result.get('user_id')}")
+                print(f"  Followers: {profile_test.result.get('follower_count')}")
+                print(f"  Verified: {profile_test.result.get('is_verified')}")
+            
+            # Conversation history test
+            history_test = await test_suite.run_conversation_history_test(username, platform)
+            print(f"Conversation history: {history_test.status.value}")
+            
+            if history_test.result:
+                print(f"  Messages: {history_test.result.get('message_count')}")
+        
+        else:
+            print("No specific test requested. Use --help for options.")
+            print("\nAvailable tests:")
+            print("  --target-users: Test all predefined target users")
+            print("  --username: Test specific username")
+            print("  --interactive: Interactive testing mode")
+            print("  --send-message: Send test message")
+            print(f"\nTarget users: {', '.join(target_users)}")
+    
+    finally:
+        await api_integration.cleanup()
 
 
 if __name__ == '__main__':

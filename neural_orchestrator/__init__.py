@@ -49,13 +49,60 @@ from .safety.enhanced_guardrails import EnhancedGuardrails
 from .device.os_reaction_collector import DeviceOSReactionCollector, OSReactionEvent
 from .device.pinecone_integration import PineconeOSReactionIntegration, AdaptiveModelAccelerationManager
 from .social_media.instagram_plugin import InstagramPluginManager, InstagramPluginType, InstagramMediaItem, InstagramUserProfile
-from .core.lightweight_context_model import LightweightContextModel, ContextType, ContextItem
+from .core.lightweight_context_model import LightweightContextModel, ContextType as ModelContextType, ContextItem
 from .cross_service_callbacks import (
     CrossServiceCallbackManager,
     CallbackParcel,
     CallbackResponse,
     CallbackStatus,
     ParcelPriority
+)
+from .plugins.model_loader import (
+    ModelDLLLoader,
+    PluginStatus,
+    PluginType,
+    PluginMetadata,
+    ForegroundActivity
+)
+from .plugins.message_router import (
+    MessageRouter,
+    MessageStatus,
+    VerificationLevel,
+    UserProfile,
+    MessageRoute,
+    ImposterFlag
+)
+from .agents.agent_manager import (
+    AgentManager,
+    AgentStatus,
+    AgentType,
+    AgentConfig,
+    AgentAction,
+    GitAgentListing
+)
+from .agents.agent_awareness_steering import (
+    AgentAwarenessSteering,
+    AwarenessLevel,
+    SteeringMode,
+    ContextType as AwarenessContextType,
+    AwarenessContext,
+    SteeringDecision,
+    AwarenessMetric
+)
+from .social_media.real_api_integration import (
+    RealAPIIntegration,
+    Platform,
+    ProfileStatus,
+    UserProfile as SocialUserProfile,
+    ConversationMessage,
+    ProximityMatch
+)
+from .social_media.test_suite import (
+    SocialMediaTestSuite,
+    TestStatus,
+    TestType,
+    TestCase,
+    TestSession
 )
 
 __all__ = [
@@ -106,11 +153,46 @@ __all__ = [
     'InstagramMediaItem',
     'InstagramUserProfile',
     'LightweightContextModel',
-    'ContextType',
+    'ModelContextType',
     'ContextItem',
     'CrossServiceCallbackManager',
     'CallbackParcel',
     'CallbackResponse',
     'CallbackStatus',
-    'ParcelPriority'
+    'ParcelPriority',
+    'ModelDLLLoader',
+    'PluginStatus',
+    'PluginType',
+    'PluginMetadata',
+    'ForegroundActivity',
+    'MessageRouter',
+    'MessageStatus',
+    'VerificationLevel',
+    'UserProfile',
+    'MessageRoute',
+    'ImposterFlag',
+    'RealAPIIntegration',
+    'Platform',
+    'ProfileStatus',
+    'SocialUserProfile',
+    'ConversationMessage',
+    'ProximityMatch',
+    'SocialMediaTestSuite',
+    'TestStatus',
+    'TestType',
+    'TestCase',
+    'TestSession',
+    'AgentManager',
+    'AgentStatus',
+    'AgentType',
+    'AgentConfig',
+    'AgentAction',
+    'GitAgentListing',
+    'AgentAwarenessSteering',
+    'AwarenessLevel',
+    'SteeringMode',
+    'AwarenessContextType',
+    'AwarenessContext',
+    'SteeringDecision',
+    'AwarenessMetric'
 ]
